@@ -50,15 +50,18 @@ public class MainActivity extends AppCompatActivity {
         LogTools.i("xiamin");
         LogTools.w("xiamin");
         LogTools.e("xiamin");
+        LogTools.json(text_json);
+
+        LogTools.e("iii","xiamin");
         new LogTools.Settings()
                 .setBorderEnable(false)
                 .setLogLevel(Log.WARN);
         LogTools.i("xiamin");
         LogTools.w("xiamin");
         LogTools.e("xiamin");
-
+        LogTools.json(text_json);
 //        LogUtils.e("xiamin");
 //        LogUtils.e(test_xml);
-//        LogUtils.json(text_json);
+
     }
 }
