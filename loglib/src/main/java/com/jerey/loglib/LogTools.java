@@ -38,8 +38,8 @@ import javax.xml.transform.stream.StreamSource;
 /**
  * <pre>
  *     author: xiamin
- *     blog  : http://jerey.cngongjulei
- *     desc  : 一个美化,可控制打印等级,自动以类名为Tag,同时支持自定义Tag的日志
+ *     blog  : http://jerey.cn
+ *     desc  : 一个可控制边框美化,可控制打印等级,可控制Log info, 自动识别类名为Tag, 同时支持自定义Tag的日志工具库
  * </pre>
  */
 public final class LogTools {
@@ -48,9 +48,9 @@ public final class LogTools {
     private static final int XML = -2;
     private static final int MAX_LEN = 4000;
 
-    private static final String TOP_BORDER    = "╔═══════════════════════════════════════════════════════════════════════════════════════════";
-    private static final String LEFT_BORDER   = "║ ";
-    private static final String BOTTOM_BORDER = "╚═══════════════════════════════════════════════════════════════════════════════════════════";
+    private static final String TOP_BORDER = "╔═════════════════════════════════════════════════════════════════════════════════════";
+    private static final String LEFT_BORDER = "║ ";
+    private static final String BOTTOM_BORDER = "╚═════════════════════════════════════════════════════════════════════════════════════";
     //解决windows和linux换行不一致的问题 功能和"\n"是一致的,但是此种写法屏蔽了 Windows和Linux的区别 更保险.
     private static final String LINE_SEPARATOR = System.getProperty("line.separator");
 
@@ -60,6 +60,7 @@ public final class LogTools {
     private static boolean mTagIsSpace = true; // log标签是否为空白
     private static boolean mLog2FileEnable = false;// log是否写入文件
     private static boolean mLogBorderEnable = true; // log边框
+    private static boolean mLogInfoEnable = true;   // log详情开关
     private static int mLogFilter = Log.VERBOSE;    // log过滤器
 
 
@@ -128,7 +129,6 @@ public final class LogTools {
     }
 
     /**
-     *
      * @param type
      * @param tag
      * @param objects
@@ -177,7 +177,7 @@ public final class LogTools {
             tag = isSpace(tag) ? className : tag;
         }
         String head = new Formatter()
-                .format("Thread: %s, %s(%s.java:%d)" + LINE_SEPARATOR,
+                .format("Thread: %s,  Method: %s  (%s.java  Line:%d)" + LINE_SEPARATOR,
                         Thread.currentThread().getName(),
                         targetElement.getMethodName(),
                         className,
@@ -212,8 +212,21 @@ public final class LogTools {
         if (mLogBorderEnable) {
             StringBuilder sb = new StringBuilder();
             String[] lines = msg.split(LINE_SEPARATOR);
+            sb.append(TOP_BORDER).append(LINE_SEPARATOR);
+            sb.append(LEFT_BORDER).append(head);
             for (String line : lines) {
                 sb.append(LEFT_BORDER).append(line).append(LINE_SEPARATOR);
+            }
+            sb.append(BOTTOM_BORDER).append(LINE_SEPARATOR);
+            msg = sb.toString();
+            return new String[]{tag, msg};
+        }
+
+        if (mLogInfoEnable) {
+            StringBuilder sb = new StringBuilder();
+            String[] lines = msg.split(LINE_SEPARATOR);
+            for (String line : lines) {
+                sb.append(line).append(LINE_SEPARATOR);
             }
             msg = sb.toString();
             return new String[]{tag, head + msg};
@@ -258,7 +271,6 @@ public final class LogTools {
      * @param msg
      */
     private static void logOutout(int type, String tag, String msg) {
-        if (mLogBorderEnable) printSubLog(type, tag, TOP_BORDER);
         int len = msg.length();
         int countOfSub = len / MAX_LEN;
         if (countOfSub > 0) {
@@ -266,17 +278,13 @@ public final class LogTools {
             String sub;
             for (int i = 0; i < countOfSub; i++) {
                 sub = msg.substring(index, index + MAX_LEN);
-                if (mLogBorderEnable) sub = LEFT_BORDER + sub;
                 printSubLog(type, tag, sub);
                 index += MAX_LEN;
             }
-            if (mLogBorderEnable) msg = LEFT_BORDER + msg;
             printSubLog(type, tag, msg.substring(index, len));
         } else {
-            if (mLogBorderEnable) msg = LEFT_BORDER + msg;
             printSubLog(type, tag, msg);
         }
-        if (mLogBorderEnable) printSubLog(type, tag, BOTTOM_BORDER);
     }
 
     private static void printSubLog(final int type, final String tag, String msg) {
@@ -312,6 +320,9 @@ public final class LogTools {
         return true;
     }
 
+    /**
+     * LogTools设置类
+     */
     public static class Settings {
         /**
          * 设置Log是否开启
@@ -341,10 +352,44 @@ public final class LogTools {
          * @param enable
          * @return
          */
-        public Settings setBorderEnable(Boolean enable) {
+        public Settings setBorderEnable(boolean enable) {
             LogTools.mLogBorderEnable = enable;
             return this;
         }
 
+        /**
+         * 设置Log 行号,方法,class详情信息是否打印的开关
+         * @param enable
+         * @return
+         */
+        public Settings setInfoEnable(boolean enable){
+            LogTools.mLogInfoEnable = false;
+            return this;
+        }
+
+        /**
+         * 获取打印等级
+         *
+         * @return
+         */
+        public int getLogLevel() {
+            return LogTools.mLogFilter;
+        }
+
+    }
+
+    /**
+     * 设置入口
+     * <code>
+     * LogTools.getSettings()
+     * .setLogLevel(Log.WARN)
+     * .setBorderEnable(true)
+     * .setLogEnable(true);
+     * </code>
+     *
+     * @return
+     */
+    public static Settings getSettings() {
+        return new Settings();
     }
 }
