@@ -47,15 +47,30 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
         LogTools.i("xiamin");
         LogTools.w("xiamin");
         LogTools.e("xiamin");
         LogTools.json(text_json);
 
         LogTools.e("iii","xiamin");
-        new LogTools.Settings()
+
+        LogTools.getSettings()
+                .setLogLevel(Log.WARN)
                 .setBorderEnable(false)
-                .setLogLevel(Log.WARN);
+                .setLogEnable(true);
+
+        LogTools.i("xiamin");
+        LogTools.w("xiamin");
+        LogTools.e("xiamin");
+        LogTools.json(text_json);
+
+        LogTools.getSettings()
+                .setLogLevel(Log.WARN)
+                .setBorderEnable(false)
+                .setInfoEnable(false)
+                .setLogEnable(true);
+
         LogTools.i("xiamin");
         LogTools.w("xiamin");
         LogTools.e("xiamin");
