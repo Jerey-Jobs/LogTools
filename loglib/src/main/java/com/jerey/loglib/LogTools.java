@@ -363,7 +363,7 @@ public final class LogTools {
          * @return
          */
         public Settings setInfoEnable(boolean enable){
-            LogTools.mLogInfoEnable = false;
+            LogTools.mLogInfoEnable = enable;
             return this;
         }
 
