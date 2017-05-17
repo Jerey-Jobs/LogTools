@@ -1,14 +1,24 @@
 package com.jerey.loglib;
 
+import android.app.Activity;
+import android.app.Application;
+import android.os.Bundle;
 import android.util.Log;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Formatter;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Source;
@@ -54,6 +64,10 @@ public final class LogTools {
     //解决windows和linux换行不一致的问题 功能和"\n"是一致的,但是此种写法屏蔽了 Windows和Linux的区别 更保险.
     private static final String LINE_SEPARATOR = System.getProperty("line.separator");
 
+    private static final String NULL_TIPS = "Log with a null object;";
+    private static final String NULL = "null";
+    private static final String ARGS = "args";
+
     private static String mLogDir;  // log存储目录
     private static boolean mLogEnable = true; // log总开关
     private static String mGlobalLogTag = ""; // log标签
@@ -62,11 +76,8 @@ public final class LogTools {
     private static boolean mLogBorderEnable = true; // log边框
     private static boolean mLogInfoEnable = true;   // log详情开关
     private static int mLogFilter = Log.VERBOSE;    // log过滤器
+    private static ExecutorService mExecutor;
 
-
-    private static final String NULL_TIPS = "Log with a null object;";
-    private static final String NULL = "null";
-    private static final String ARGS = "args";
 
     private LogTools() {
         throw new UnsupportedOperationException("u can't instantiate me...");
@@ -359,10 +370,11 @@ public final class LogTools {
 
         /**
          * 设置Log 行号,方法,class详情信息是否打印的开关
+         *
          * @param enable
          * @return
          */
-        public Settings setInfoEnable(boolean enable){
+        public Settings setInfoEnable(boolean enable) {
             LogTools.mLogInfoEnable = enable;
             return this;
         }
@@ -376,6 +388,16 @@ public final class LogTools {
             return LogTools.mLogFilter;
         }
 
+        /**
+         * 设置log保存目录,若不设置,默认不保存
+         *
+         * @param dir
+         * @return
+         */
+        public Settings setLogSaveDir(String dir) {
+            LogTools.mLogDir = dir;
+            return this;
+        }
     }
 
     /**
@@ -391,5 +413,140 @@ public final class LogTools {
      */
     public static Settings getSettings() {
         return new Settings();
+    }
+
+    /**
+     * this will save infoString in notify thread, and it will Only save the
+     * last two days log (every maximum storage is 5Mb)
+     *
+     * @param infoString
+     */
+    private void writeToFile(final String infoString) {
+        if (mExecutor == null) {
+            mExecutor = Executors.newSingleThreadExecutor();
+        }
+        mExecutor.execute(new SaveLogRunnable(infoString));
+    }
+
+
+    private static final class SaveLogRunnable implements Runnable {
+        private static final String TAG = "SaveLogRunnable";
+        private static final String FILE_PATH = "/sdcard/msc/Dialog/";
+        private static final String FILE_END = "logUtils.log";
+        private static final int MAX_LENGTH = 5 * 1024 * 1024;
+        private static final int MAX_TIME = 48 * 3600 * 1000;
+        private String dataString;
+
+        // delete old log files, only do this when save log first time
+        static {
+            File folder = new File(FILE_PATH);
+            if (folder.exists()) {
+                Log.d(TAG, "folder.exists");
+                File[] files = folder.listFiles();
+                for (File file : files) {
+                    String fileName = file.getName();
+                    if (fileName.contains(FILE_END)) {
+                        Log.d(TAG, "file.lastModified():" + file.lastModified());
+                        Log.d(TAG, "System.currentTimeMillis()："
+                                + System.currentTimeMillis());
+                        if (System.currentTimeMillis() - file.lastModified() > MAX_TIME) {
+                            Log.d(TAG, "delete old file：" + file.getName());
+                            file.delete();
+                        }
+                    }
+                }
+            } else {
+                Log.d(TAG, "folder not exist");
+                folder.mkdir();
+            }
+        }
+
+        public SaveLogRunnable(String string) {
+            this.dataString = string;
+        }
+
+        @Override
+        public void run() {
+            FileOutputStream outputStream = null;
+            try {
+                File folder = new File(FILE_PATH);
+                if (!folder.exists()) {
+                    folder.mkdir();
+                }
+
+                SimpleDateFormat nameDateFormat = new SimpleDateFormat("yyyy-MM-dd");
+                File file = new File(FILE_PATH + nameDateFormat.format(new Date()) + FILE_END);
+
+                if (!file.exists()) {
+                    Log.i(TAG, "file not exists");
+                    file.createNewFile();
+                }
+
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                outputStream = new FileOutputStream(file, true);
+                StringBuffer sb = new StringBuffer();
+                sb.append(sdf.format(new Date()));
+                sb.append(": ");
+                sb.append(dataString);
+                sb.append("\n");
+
+                byte[] buffer = sb.toString().getBytes("utf-8");
+                Log.i(TAG, buffer.toString());
+                if (file.length() + buffer.length > MAX_LENGTH) {
+                    Log.w(TAG, "too much log");
+                    return;
+                }
+                outputStream.write(buffer);
+            } catch (IOException e) {
+                e.printStackTrace();
+            } finally {
+                try {
+                    if (outputStream != null) {
+                        outputStream.close();
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
+    public static void monitorLifeCycle(Application application) {
+        application.registerActivityLifecycleCallbacks(new Application.ActivityLifecycleCallbacks() {
+            @Override
+            public void onActivityCreated(Activity activity, Bundle savedInstanceState) {
+                LogTools.d("onActivityCreated: " + activity.getComponentName().getClassName());
+            }
+
+            @Override
+            public void onActivityStarted(Activity activity) {
+                LogTools.d("onActivityStarted: " + activity.getComponentName().getClassName());
+            }
+
+            @Override
+            public void onActivityResumed(Activity activity) {
+                LogTools.d("onActivityResumed: " + activity.getComponentName().getClassName());
+            }
+
+            @Override
+            public void onActivityPaused(Activity activity) {
+                LogTools.d("onActivityPaused: " + activity.getComponentName().getClassName());
+            }
+
+            @Override
+            public void onActivityStopped(Activity activity) {
+                LogTools.d("onActivityStopped: " + activity.getComponentName().getClassName());
+            }
+
+            @Override
+            public void onActivitySaveInstanceState(Activity activity, Bundle outState) {
+                LogTools.d("onActivitySaveInstanceState: " + activity.getComponentName().getClassName());
+            }
+
+            @Override
+            public void onActivityDestroyed(Activity activity) {
+                LogTools.d("onActivityDestroyed: " + activity.getComponentName().getClassName());
+            }
+        });
     }
 }
