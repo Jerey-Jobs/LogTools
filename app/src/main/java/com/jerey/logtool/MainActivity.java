@@ -66,7 +66,7 @@ public class MainActivity extends AppCompatActivity {
         LogTools.json(text_json);
 
         LogTools.getSettings()
-                .setLogLevel(Log.WARN)
+                .setLogLevel(Log.DEBUG)
                 .setBorderEnable(false)
                 .setInfoEnable(false)
                 .setLogEnable(true);
