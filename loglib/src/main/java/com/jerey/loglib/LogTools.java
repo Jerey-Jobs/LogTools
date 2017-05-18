@@ -515,37 +515,37 @@ public final class LogTools {
         application.registerActivityLifecycleCallbacks(new Application.ActivityLifecycleCallbacks() {
             @Override
             public void onActivityCreated(Activity activity, Bundle savedInstanceState) {
-                LogTools.d("onActivityCreated: " + activity.getComponentName().getClassName());
+                LogTools.d(activity.getComponentName().getClassName(), "onCreate");
             }
 
             @Override
             public void onActivityStarted(Activity activity) {
-                LogTools.d("onActivityStarted: " + activity.getComponentName().getClassName());
+                LogTools.d(activity.getComponentName().getClassName(), "onStart");
             }
 
             @Override
             public void onActivityResumed(Activity activity) {
-                LogTools.d("onActivityResumed: " + activity.getComponentName().getClassName());
+                LogTools.d(activity.getComponentName().getClassName(), "onResume");
             }
 
             @Override
             public void onActivityPaused(Activity activity) {
-                LogTools.d("onActivityPaused: " + activity.getComponentName().getClassName());
+                LogTools.d(activity.getComponentName().getClassName(), "onPause");
             }
 
             @Override
             public void onActivityStopped(Activity activity) {
-                LogTools.d("onActivityStopped: " + activity.getComponentName().getClassName());
+                LogTools.d(activity.getComponentName().getClassName(), "onStop");
             }
 
             @Override
             public void onActivitySaveInstanceState(Activity activity, Bundle outState) {
-                LogTools.d("onActivitySaveInstanceState: " + activity.getComponentName().getClassName());
+                LogTools.d(activity.getComponentName().getClassName(), "onSaveInstance");
             }
 
             @Override
             public void onActivityDestroyed(Activity activity) {
-                LogTools.d("onActivityDestroyed: " + activity.getComponentName().getClassName());
+                LogTools.d(activity.getComponentName().getClassName(), "onDestroy");
             }
         });
     }
