@@ -348,7 +348,11 @@ public final class LogTools {
 
         /**
          * 设置打印等级,只有高于该打印等级的log会被打印<br>
-         * 打印等级从低到高分别为: Log.VERBOSE < Log.DEBUG < Log.INFO < Log.WARN < Log.ERROR < Log.ASSERT
+         * 打印等级从低到高分别为:
+         * <p>
+         *     Log.VERBOSE smalleer than Log.DEBUG smalleer than Log.INFO
+         *     smalleer than Log.WARN smalleer than Log.ERROR smalleer than Log.ASSERT
+         * </p>
          *
          * @param logLevel
          */

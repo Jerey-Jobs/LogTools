@@ -1,0 +1,63 @@
+apply plugin: 'com.android.library'
+
+//version = "0.1"
+
+
+android {
+    compileSdkVersion 25
+    buildToolsVersion "25.0.2"
+
+    defaultConfig {
+        minSdkVersion 14
+        targetSdkVersion 25
+        versionCode 1
+        versionName "1.0"
+
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+dependencies {
+    compile fileTree(dir: 'libs', include: ['*.jar'])
+    androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
+        exclude group: 'com.android.support', module: 'support-annotations'
+    })
+    compile 'com.android.support:appcompat-v7:25.1.1'
+    testCompile 'junit:junit:4.12'
+}
+
+
+project.ext {
+    bintrayRepo = 'jerey'             //maven工程名
+    bintrayName = 'logtools'          //项目名
+
+    publishedGroupId = 'com.jerey.logtools'
+    libraryName = 'logtools'          //lib名字
+    artifact = 'logtools'
+
+    libraryDescription = 'A loglib for Android'
+
+    siteUrl = 'https://github.com/Jerey-Jobs/LogTools'
+    gitUrl = 'https://github.com/Jerey-Jobs/LogTools.git'
+
+    libraryVersion = '0.4'
+
+    developerId = 'jerey'
+    developerName = 'jerey'
+    developerEmail = 'jerey_jobs@foxmail.com'
+
+    licenseName = 'The Apache Software License, Version 2.0'
+    licenseUrl = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+    allLicenses = ["Apache-2.0"]
+}
+
+apply from: 'https://raw.githubusercontent.com/nuuneoi/JCenter/master/installv1.gradle'
+apply from: 'https://raw.githubusercontent.com/nuuneoi/JCenter/master/bintrayv1.gradle'
+
