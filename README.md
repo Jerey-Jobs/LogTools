@@ -11,23 +11,11 @@
 -------
 ## import/引入
 
-project's build.gradle (工程下的 build.gradle)
-
-``` gradle
-	allprojects {
-		repositories {
-			...
-			maven { url 'https://jitpack.io' }
-		}
-	}
-}
-```
-
 module's build.gradle (模块的build.gradle)
 
 ``` gradle
 	dependencies {
-	         compile 'com.github.Jerey-Jobs:LogTools:0.1'
+	         compile 'com.jerey.logtools:logtools:0.4'
 	}
 ```
 ----
