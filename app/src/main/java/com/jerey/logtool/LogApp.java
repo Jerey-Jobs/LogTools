@@ -1,6 +1,7 @@
 package com.jerey.logtool;
 
 import android.app.Application;
+import android.util.Log;
 
 import com.jerey.loglib.LogTools;
 
@@ -12,6 +13,8 @@ public class LogApp extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
-        LogTools.monitorLifeCycle(this);
+        LogTools.getSettings()
+                .setGlobalLogTag(LogApp.class.getSimpleName())
+                .setBorderEnable(false);
     }
 }

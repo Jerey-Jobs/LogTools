@@ -1,24 +1,14 @@
 package com.jerey.loglib;
 
-import android.app.Activity;
-import android.app.Application;
-import android.os.Bundle;
 import android.util.Log;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.Formatter;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Source;
@@ -28,56 +18,56 @@ import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
 
 /**
- * ┌───┐   ┌───┬───┬───┬───┐ ┌───┬───┬───┬───┐ ┌───┬───┬───┬───┐ ┌───┬───┬───┐
- * │Esc│   │ F1│ F2│ F3│ F4│ │ F5│ F6│ F7│ F8│ │ F9│F10│F11│F12│ │P/S│S L│P/B│  ┌┐    ┌┐    ┌┐
- * └───┘   └───┴───┴───┴───┘ └───┴───┴───┴───┘ └───┴───┴───┴───┘ └───┴───┴───┘  └┘    └┘    └┘
- * ┌───┬───┬───┬───┬───┬───┬───┬───┬───┬───┬───┬───┬───┬───────┐ ┌───┬───┬───┐ ┌───┬───┬───┬───┐
- * │~ `│! 1│@ 2│# 3│$ 4│% 5│^ 6│& 7│* 8│( 9│) 0│_ -│+ =│ BacSp │ │Ins│Hom│PUp│ │N L│ / │ * │ - │
- * ├───┴─┬─┴─┬─┴─┬─┴─┬─┴─┬─┴─┬─┴─┬─┴─┬─┴─┬─┴─┬─┴─┬─┴─┬─┴─┬─────┤ ├───┼───┼───┤ ├───┼───┼───┼───┤
- * │ Tab │ Q │ W │ E │ R │ T │ Y │ U │ I │ O │ P │{ [│} ]│ | \ │ │Del│End│PDn│ │ 7 │ 8 │ 9 │   │
- * ├─────┴┬──┴┬──┴┬──┴┬──┴┬──┴┬──┴┬──┴┬──┴┬──┴┬──┴┬──┴┬──┴─────┤ └───┴───┴───┘ ├───┼───┼───┤ + │
- * │ Caps │ A │ S │ D │ F │ G │ H │ J │ K │ L │: ;│" '│ Enter  │               │ 4 │ 5 │ 6 │   │
- * ├──────┴─┬─┴─┬─┴─┬─┴─┬─┴─┬─┴─┬─┴─┬─┴─┬─┴─┬─┴─┬─┴─┬─┴────────┤     ┌───┐     ├───┼───┼───┼───┤
- * │ Shift  │ Z │ X │ C │ V │ B │ N │ M │< ,│> .│? /│  Shift   │     │ ↑ │     │ 1 │ 2 │ 3 │   │
- * ├─────┬──┴─┬─┴──┬┴───┴───┴───┴───┴───┴──┬┴───┼───┴┬────┬────┤ ┌───┼───┼───┐ ├───┴───┼───┤ E││
- * │ Ctrl│    │Alt │         Space         │ Alt│    │    │Ctrl│ │ ← │ ↓ │ → │ │   0   │ . │←─┘│
- * └─────┴────┴────┴───────────────────────┴────┴────┴────┴────┘ └───┴───┴───┘ └───────┴───┴───┘
- * Created by xiamin on 3/29/17.
- */
-
-/**
  * <pre>
- *     author: xiamin
- *     blog  : http://jerey.cn
- *     desc  : 一个可控制边框美化,可控制打印等级,可控制Log info, 自动识别类名为Tag, 同时支持自定义Tag的日志工具库
+ *     Created by xiamin on 4/24/17.
+ *     desc  : A log lib, one can control the border beautify,
+ *             can control the print level,
+ *             can control the Log info,
+ *             automatically identify the class as Tag,
+ *             while supporting the custom Tag
+ *     use: LogTools.i(Object obj)...
+ *     setting:
+ *           LogTools.getSettings()
+ *                   .setGlobalLogTag(TAG)
+ *                   .setLogLevel(Log.WARN)
+ *                   .setBorderEnable(true)
+ *                   .setLogEnable(true);
  * </pre>
+ * <p>
+ * use <code>adb shell setprop log.tag.@params{tag} {level}</code> to control your logLevel
+ * <p>
+ * </P>
  */
 public final class LogTools {
 
     private static final int JSON = -1;
     private static final int XML = -2;
     private static final int MAX_LEN = 4000;
+    private static final int BUILD_DEBUG = -111;
 
-    private static final String TOP_BORDER = "╔═════════════════════════════════════════════════════════════════════════════════════";
+    private static final String TOP_BORDER =
+            "╔═════════════════════════════════════════════════════════════════════════════════════";
     private static final String LEFT_BORDER = "║ ";
-    private static final String BOTTOM_BORDER = "╚═════════════════════════════════════════════════════════════════════════════════════";
-    //解决windows和linux换行不一致的问题 功能和"\n"是一致的,但是此种写法屏蔽了 Windows和Linux的区别 更保险.
+    private static final String BOTTOM_BORDER =
+            "╚═════════════════════════════════════════════════════════════════════════════════════";
+    // To solve the problem of inconsistent windows and linux problems and "\n"
+    // is the same, but this way to shield the difference between Windows and
+    // Linux more insurance.
     private static final String LINE_SEPARATOR = System.getProperty("line.separator");
+
+    private static String mLogDir; // log save directory
+    private static boolean mLogEnable = true; // log master switch
+    private static String mGlobalLogTag = ""; // log tag
+    private static boolean mTagIsSpace = true; // Whether the tag is blank
+    // Whether the log will be written to file
+    private static boolean mLog2FileEnable = false;
+    private static boolean mLogBorderEnable = false; // log border
+    private static boolean mLogInfoEnable = true; // log info switch
+    private static int mLogFilter = Log.VERBOSE; // log filter
 
     private static final String NULL_TIPS = "Log with a null object;";
     private static final String NULL = "null";
     private static final String ARGS = "args";
-
-    private static String mLogDir;  // log存储目录
-    private static boolean mLogEnable = true; // log总开关
-    private static String mGlobalLogTag = ""; // log标签
-    private static boolean mTagIsSpace = true; // log标签是否为空白
-    private static boolean mLog2FileEnable = false;// log是否写入文件
-    private static boolean mLogBorderEnable = true; // log边框
-    private static boolean mLogInfoEnable = true;   // log详情开关
-    private static int mLogFilter = Log.VERBOSE;    // log过滤器
-    private static ExecutorService mExecutor;
-
 
     private LogTools() {
         throw new UnsupportedOperationException("u can't instantiate me...");
@@ -120,8 +110,17 @@ public final class LogTools {
     }
 
     public static void d(String tag, Object... contents) {
-        log(Log.DEBUG, tag, contents);
+        log(Log.VERBOSE, tag, contents);
     }
+
+    public static void v(Object contents) {
+        log(Log.VERBOSE, mGlobalLogTag, contents);
+    }
+
+    public static void v(String tag, Object... contents) {
+        log(Log.VERBOSE, tag, contents);
+    }
+
 
     public static void json(String contents) {
         log(JSON, mGlobalLogTag, contents);
@@ -139,13 +138,18 @@ public final class LogTools {
         log(XML, tag, contents);
     }
 
+
+    public static void debug_build(Object contents) {
+        log(BUILD_DEBUG, mGlobalLogTag, contents);
+    }
+
     /**
      * @param type
      * @param tag
      * @param objects
      */
     private static void log(int type, String tag, Object... objects) {
-        //全局未开,直接返回
+        // The global is not open, direct return
         if (!mLogEnable) {
             return;
         }
@@ -153,6 +157,7 @@ public final class LogTools {
         tag = processContents[0];
         String msg = processContents[1];
         switch (type) {
+            case Log.VERBOSE:
             case Log.INFO:
             case Log.ASSERT:
             case Log.DEBUG:
@@ -168,6 +173,8 @@ public final class LogTools {
             case XML:
                 logOutout(Log.DEBUG, tag, msg);
                 break;
+            case BUILD_DEBUG:
+                logOutout(BUILD_DEBUG, tag, msg);
         }
     }
 
@@ -182,9 +189,12 @@ public final class LogTools {
         if (className.contains("$")) {
             className = className.split("\\$")[0];
         }
-        if (!mTagIsSpace) {// 如果全局tag不为空，那就用全局tag
-            tag = mGlobalLogTag;
-        } else {// 全局tag为空时，如果传入的tag为空那就显示类名，否则显示tag
+        // If the global tag is not empty, use the global tag
+        if (mTagIsSpace) {
+            tag = isSpace(tag) ? mGlobalLogTag : tag;
+        } else {
+            // When the global tag is empty, the class name is displayed if the
+            // incoming tag is empty, otherwise the tag is displayed
             tag = isSpace(tag) ? className : tag;
         }
         String head = new Formatter()
@@ -196,7 +206,7 @@ public final class LogTools {
                 .toString();
         String msg = NULL_TIPS;
         if (contents != null) {
-            //正常使用情况下都是只有一个参数
+            // normal use are only one parameter
             if (contents.length == 1) {
                 Object object = contents[0];
                 msg = object == null ? NULL : object.toString();
@@ -210,12 +220,12 @@ public final class LogTools {
                 for (int i = 0, len = contents.length; i < len; ++i) {
                     Object content = contents[i];
                     sb.append(ARGS)
-                            .append("[")
-                            .append(i)
-                            .append("]")
-                            .append(" = ")
-                            .append(content == null ? NULL : content.toString())
-                            .append(LINE_SEPARATOR);
+                      .append("[")
+                      .append(i)
+                      .append("]")
+                      .append(" = ")
+                      .append(content == null ? NULL : content.toString())
+                      .append(LINE_SEPARATOR);
                 }
                 msg = sb.toString();
             }
@@ -230,7 +240,9 @@ public final class LogTools {
             }
             sb.append(BOTTOM_BORDER).append(LINE_SEPARATOR);
             msg = sb.toString();
-            return new String[]{tag, msg};
+            return new String[] {
+                    tag, msg
+            };
         }
 
         if (mLogInfoEnable) {
@@ -240,10 +252,14 @@ public final class LogTools {
                 sb.append(line).append(LINE_SEPARATOR);
             }
             msg = sb.toString();
-            return new String[]{tag, head + msg};
+            return new String[] {
+                    tag, head + msg
+            };
         }
 
-        return new String[]{tag, msg};
+        return new String[] {
+                tag, msg
+        };
     }
 
     private static String formatJson(String json) {
@@ -275,8 +291,7 @@ public final class LogTools {
     }
 
     /**
-     * 输出log
-     *
+     * Output log
      * @param type
      * @param tag
      * @param msg
@@ -301,13 +316,19 @@ public final class LogTools {
     private static void printSubLog(final int type, final String tag, String msg) {
         switch (type) {
             case Log.VERBOSE:
-                Log.v(tag, msg);
+                if (Log.isLoggable(tag, Log.VERBOSE)) {
+                    Log.v(tag, msg);
+                }
                 break;
             case Log.DEBUG:
-                Log.d(tag, msg);
+                if (Log.isLoggable(tag, Log.DEBUG)) {
+                    Log.d(tag, msg);
+                }
                 break;
             case Log.INFO:
-                Log.i(tag, msg);
+                if (Log.isLoggable(tag, Log.INFO)) {
+                    Log.i(tag, msg);
+                }
                 break;
             case Log.WARN:
                 Log.w(tag, msg);
@@ -318,11 +339,16 @@ public final class LogTools {
             case Log.ASSERT:
                 Log.wtf(tag, msg);
                 break;
+            case BUILD_DEBUG:
+                if (BuildConfig.DEBUG && Log.isLoggable(tag, Log.INFO)) {
+                    Log.i(tag, msg);
+                }
         }
     }
 
     private static boolean isSpace(String s) {
-        if (s == null) return true;
+        if (s == null)
+            return true;
         for (int i = 0, len = s.length(); i < len; ++i) {
             if (!Character.isWhitespace(s.charAt(i))) {
                 return false;
@@ -332,12 +358,11 @@ public final class LogTools {
     }
 
     /**
-     * LogTools设置类
+     * LogTools's settings helper
      */
     public static class Settings {
         /**
-         * 设置Log是否开启
-         *
+         * Set Log enable
          * @param enable
          * @return
          */
@@ -347,13 +372,10 @@ public final class LogTools {
         }
 
         /**
-         * 设置打印等级,只有高于该打印等级的log会被打印<br>
-         * 打印等级从低到高分别为:
-         * <p>
-         *     Log.VERBOSE smalleer than Log.DEBUG smalleer than Log.INFO
-         *     smalleer than Log.WARN smalleer than Log.ERROR smalleer than Log.ASSERT
-         * </p>
-         *
+         * Set the print level, only the log above the print level will be
+         * printed<br>
+         * Print levels are low to high: Log.VERBOSE < Log.DEBUG < Log.INFO <
+         * Log.WARN < Log.ERROR < Log.ASSERT
          * @param logLevel
          */
         public Settings setLogLevel(int logLevel) {
@@ -362,8 +384,7 @@ public final class LogTools {
         }
 
         /**
-         * 设置边框是否开启
-         *
+         * Set whether the border is open
          * @param enable
          * @return
          */
@@ -373,8 +394,8 @@ public final class LogTools {
         }
 
         /**
-         * 设置Log 行号,方法,class详情信息是否打印的开关
-         *
+         * Set the log line number, method, class details information whether to
+         * print
          * @param enable
          * @return
          */
@@ -384,173 +405,38 @@ public final class LogTools {
         }
 
         /**
-         * 获取打印等级
-         *
+         * suggest use the globalTAG because in this way, TestEngineer can use global tag
+         * control log level
+         * @param globalLogTag
+         * @return
+         */
+        public Settings setGlobalLogTag(String globalLogTag) {
+            LogTools.mGlobalLogTag = globalLogTag;
+            LogTools.mTagIsSpace = false;
+            return this;
+        }
+
+        /**
+         * get current log level
          * @return
          */
         public int getLogLevel() {
             return LogTools.mLogFilter;
         }
 
-        /**
-         * 设置log保存目录,若不设置,默认不保存
-         *
-         * @param dir
-         * @return
-         */
-        public Settings setLogSaveDir(String dir) {
-            LogTools.mLogDir = dir;
-            return this;
-        }
     }
 
     /**
-     * 设置入口
-     * <code>
-     * LogTools.getSettings()
-     * .setLogLevel(Log.WARN)
-     * .setBorderEnable(true)
-     * .setLogEnable(true);
-     * </code>
-     *
+     * the setting enter <br>
+     * <pre>
+     *     LogTools.getSettings()
+     *         .setGlobalLogTag(TAG)
+     *         .setBorderEnable(false)
+     *         .setInfoEnable(true);
+     * </pre>
      * @return
      */
     public static Settings getSettings() {
         return new Settings();
-    }
-
-    /**
-     * this will save infoString in notify thread, and it will Only save the
-     * last two days log (every maximum storage is 5Mb)
-     *
-     * @param infoString
-     */
-    private void writeToFile(final String infoString) {
-        if (mExecutor == null) {
-            mExecutor = Executors.newSingleThreadExecutor();
-        }
-        mExecutor.execute(new SaveLogRunnable(infoString));
-    }
-
-
-    private static final class SaveLogRunnable implements Runnable {
-        private static final String TAG = "SaveLogRunnable";
-        private static final String FILE_PATH = "/sdcard/msc/Dialog/";
-        private static final String FILE_END = "logUtils.log";
-        private static final int MAX_LENGTH = 5 * 1024 * 1024;
-        private static final int MAX_TIME = 48 * 3600 * 1000;
-        private String dataString;
-
-        // delete old log files, only do this when save log first time
-        static {
-            File folder = new File(FILE_PATH);
-            if (folder.exists()) {
-                Log.d(TAG, "folder.exists");
-                File[] files = folder.listFiles();
-                for (File file : files) {
-                    String fileName = file.getName();
-                    if (fileName.contains(FILE_END)) {
-                        Log.d(TAG, "file.lastModified():" + file.lastModified());
-                        Log.d(TAG, "System.currentTimeMillis()："
-                                + System.currentTimeMillis());
-                        if (System.currentTimeMillis() - file.lastModified() > MAX_TIME) {
-                            Log.d(TAG, "delete old file：" + file.getName());
-                            file.delete();
-                        }
-                    }
-                }
-            } else {
-                Log.d(TAG, "folder not exist");
-                folder.mkdir();
-            }
-        }
-
-        public SaveLogRunnable(String string) {
-            this.dataString = string;
-        }
-
-        @Override
-        public void run() {
-            FileOutputStream outputStream = null;
-            try {
-                File folder = new File(FILE_PATH);
-                if (!folder.exists()) {
-                    folder.mkdir();
-                }
-
-                SimpleDateFormat nameDateFormat = new SimpleDateFormat("yyyy-MM-dd");
-                File file = new File(FILE_PATH + nameDateFormat.format(new Date()) + FILE_END);
-
-                if (!file.exists()) {
-                    Log.i(TAG, "file not exists");
-                    file.createNewFile();
-                }
-
-                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-                outputStream = new FileOutputStream(file, true);
-                StringBuffer sb = new StringBuffer();
-                sb.append(sdf.format(new Date()));
-                sb.append(": ");
-                sb.append(dataString);
-                sb.append("\n");
-
-                byte[] buffer = sb.toString().getBytes("utf-8");
-                Log.i(TAG, buffer.toString());
-                if (file.length() + buffer.length > MAX_LENGTH) {
-                    Log.w(TAG, "too much log");
-                    return;
-                }
-                outputStream.write(buffer);
-            } catch (IOException e) {
-                e.printStackTrace();
-            } finally {
-                try {
-                    if (outputStream != null) {
-                        outputStream.close();
-                    }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-    }
-
-    public static void monitorLifeCycle(Application application) {
-        application.registerActivityLifecycleCallbacks(new Application.ActivityLifecycleCallbacks() {
-            @Override
-            public void onActivityCreated(Activity activity, Bundle savedInstanceState) {
-                LogTools.d(activity.getComponentName().getClassName(), "onCreate");
-            }
-
-            @Override
-            public void onActivityStarted(Activity activity) {
-                LogTools.d(activity.getComponentName().getClassName(), "onStart");
-            }
-
-            @Override
-            public void onActivityResumed(Activity activity) {
-                LogTools.d(activity.getComponentName().getClassName(), "onResume");
-            }
-
-            @Override
-            public void onActivityPaused(Activity activity) {
-                LogTools.d(activity.getComponentName().getClassName(), "onPause");
-            }
-
-            @Override
-            public void onActivityStopped(Activity activity) {
-                LogTools.d(activity.getComponentName().getClassName(), "onStop");
-            }
-
-            @Override
-            public void onActivitySaveInstanceState(Activity activity, Bundle outState) {
-                LogTools.d(activity.getComponentName().getClassName(), "onSaveInstance");
-            }
-
-            @Override
-            public void onActivityDestroyed(Activity activity) {
-                LogTools.d(activity.getComponentName().getClassName(), "onDestroy");
-            }
-        });
     }
 }

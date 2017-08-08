@@ -66,14 +66,14 @@ public class MainActivity extends AppCompatActivity {
         LogTools.json(text_json);
 
         LogTools.getSettings()
-                .setLogLevel(Log.DEBUG)
-                .setBorderEnable(false)
-                .setInfoEnable(false)
+                .setLogLevel(Log.VERBOSE)
+                .setBorderEnable(true)
+                .setInfoEnable(true)
                 .setLogEnable(true);
-
-        LogTools.i("xiamin");
-        LogTools.w("xiamin");
-        LogTools.e("xiamin");
+        LogTools.v("hello1");
+        LogTools.i("hello2");
+        LogTools.w("hello3");
+        LogTools.e("hello4");
         LogTools.json(text_json);
 //        LogUtils.e("xiamin");
 //        LogUtils.e(test_xml);
