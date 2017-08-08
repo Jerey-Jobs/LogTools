@@ -1,8 +1,8 @@
 ## LogTools
 ---
 
-正常的Log驱动都会有自己的打印控制，Android系统也不例外，不过不是很好，需要代码手动判断，可以看package/app下面打印log时都是这么使用的。因此我们封装一个Log库即可，该类在
-rk3288_new/frameworks/robot/java/com/avatar/robot/util路径下，LogUtils，即com.avatar.robot.util路径下，大家可以直接引用。
+正常的Log驱动都会有自己的打印控制，Android系统也不例外，不过不是很好，需要代码手动判断，可以看package/app下面打印log时都是这么使用的。因此我们封装一个Log库即可。
+
 ``` java
 if (Log.isLoggable(tag, Log.DEBUG)) {
     Log.d(tag, msg);
